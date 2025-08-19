@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dhaka Safety Map — final</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+ 
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+ <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Dhaka Safety Map</h1>
+
+      <div class="search-wrap" role="search" aria-label="Search place">
+        <input id="searchInput" placeholder="Search place (e.g., Gulshan, Dhaka)"/>
+        <button id="searchBtn">Go</button>
+      </div>
+
+      <div class="spacer"></div>
+
+      <button id="addModeBtn" class="icon-btn" title="Add dangerzone"><img src="./add.png" alt="add" id="addIcon" /> <span class="hint" id="addLabel">Add dangerzone</span></button>
+
+      <button id="locateBtn" class="icon-btn" title="Locate me (L)"><img src="./gps.png" alt="gps" id="gpsIcon" /></button>
+
+      <button id="darkModeBtn" class="icon-btn" title="Toggle dark mode"><img src="./night.png" alt="dark mode" id="darkIcon" /></button>
+
+      <button id="myAccountBtn" class="icon-btn" title="My account" style="display:none"><img src="./user.png" alt="account" id="userIcon" /></button>
+
+      <span id="userEmail" class="hint"></span>
+      <button id="loginBtn" class="btn btn-ghost">Sign in with Google</button>
+      <button id="logoutBtn" class="btn btn-ghost" style="display:none">Logout</button>
+    </header>
+
+    <div id="map"></div>
+    <div id="searchResults" aria-hidden="true"></div>
+  </div>
+
+ 
+  <div class="panel" id="addPanel">
+    <header><strong>Add an Unsafe Spot</strong></header>
+    <div class="content">
+      <label>Selected location</label>
+      <input id="coordField" disabled placeholder="Click on map to select…"/>
+
+      <label>Radius (meters)</label>
+      <div class="radius-row">
+        <input id="radiusRange" class="range" type="range" min="20" max="200" step="5" value="60"/>
+        <div style="min-width:56px;text-align:right"><span id="radiusValue">60m</span></div>
+      </div>
+      <div class="progress" aria-hidden><div class="fill" id="radiusFill"></div></div>
+
+      <label>Category</label>
+      <select id="category">
+        <option value="harassment">Harassment</option>
+        <option value="mugging">Mugging/Robbery</option>
+        <option value="scam">Scam/Fraud</option>
+        <option value="unsafe_road">Unsafe Road / Alley</option>
+        <option value="other">Other</option>
+      </select>
+
+      <label>Short description</label>
+      <textarea id="desc" maxlength="280" placeholder="What makes it unsafe? Time range? Tips."></textarea>
+
+      <div class="actions">
+    
+        <button id="exitAdd" class="btn btn-secondary">
+          <img src="./logout.png" alt="exit" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;filter:brightness(0.95);"/>
+          Exit
+        </button>
+        <button id="cancelAdd" class="btn btn-ghost">Clear</button>
+        <button id="submitAdd" class="btn btn-primary">Submit</button>
+      </div>
+    </div>
+  </div>
+
+ 
+  <div id="filterBox" class="collapsed" title="Show/hide categories">
+    <div id="filterHeader">
+      <div style="font-weight:600;font-size:13px">Filters</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button id="filterToggle" title="Collapse/expand filters"><img src="./add.png" alt="toggle" style="transform:rotate(45deg);opacity:.8;width:14px;height:14px"></button>
+      </div>
+    </div>
+    <div id="filterBody">
+      <label><input type="checkbox" data-cat="harassment" checked /> Harassment</label>
+      <label><input type="checkbox" data-cat="mugging" checked /> Mugging</label>
+      <label><input type="checkbox" data-cat="scam" checked /> Scam</label>
+      <label><input type="checkbox" data-cat="unsafe_road" checked /> Unsafe road</label>
+      <label><input type="checkbox" data-cat="other" checked /> Other</label>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div>Danger scale (net upvotes)</div>
+    <div class="bar"></div>
+    <div class="hint">Yellow = low, Red = high</div>
+  </div>
+
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
