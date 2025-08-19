@@ -332,144 +332,305 @@
       to{opacity:1;transform:translateY(0);}
     }
 
-    @media(max-width:900px){
-      #searchInput{width:180px}
-      .panel{width:96vw;left:2vw}
-      #searchResults{left:2vw;width:96vw}
-      #filterBox{right:8px;top:120px;width:90vw;max-width:96vw;} /* move filter lower */
-      .legend{right:8px;bottom:64px;} /* move legend up to avoid mobile browser bars */
+    /* 1. Map viewport & responsiveness */
+    html, body, #app, #map {
+      min-height: 100vh;
+      height: 100vh;
+      width: 100vw;
+      max-width: 100vw;
+      max-height: 100vh;
+      box-sizing: border-box;
+      overflow: hidden;
     }
-    /* Enhanced mobile responsiveness */
-    @media(max-width:600px){
-      header{
-        flex-wrap:wrap;
-        padding:8px 2vw 8px 2vw;
-        gap:8px;
-        height:auto;
-        min-height:54px;
+    #map {
+      width: 100vw;
+      height: 100vh;
+      min-height: 100vh;
+      min-width: 100vw;
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 1;
+    }
+
+    /* 2. UI elements: search bar, header, filter, legend, credit */
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      width: 100vw;
+      z-index: 2000;
+      background: var(--ui-bg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 56px;
+      min-height: 56px;
+      padding: 8px 2vw 8px 2vw;
+      box-sizing: border-box;
+    }
+    header h1 {
+      font-size: 18px;
+      margin: 0 8px 0 0;
+      font-weight: 700;
+      letter-spacing: -.5px;
+      flex-shrink: 0;
+    }
+    .search-wrap {
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: 100vw;
+      margin: 0;
+      padding: 0 4px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #searchInput {
+      width: 100%;
+      min-width: 0;
+      max-width: 100vw;
+      font-size: 15px;
+      padding: 9px 10px;
+      border-radius: 10px;
+    }
+    #searchBtn {
+      padding: 9px 14px;
+      font-size: 15px;
+      border-radius: 10px;
+    }
+    .spacer { display: none; }
+
+    .icon-btn, .btn {
+      min-width: 44px;
+      min-height: 44px;
+      font-size: 16px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      margin: 0 2px;
+      box-sizing: border-box;
+    }
+    .icon-btn img { width: 22px; height: 22px; }
+    #userEmail { display: none; }
+
+    #searchResults {
+      position: fixed;
+      top: 56px;
+      left: 2vw;
+      width: 96vw;
+      max-width: 98vw;
+      border-radius: 12px;
+      z-index: 2100;
+      font-size: 15px;
+    }
+
+    /* 3. Panel (add dangerzone) */
+    .panel {
+      position: fixed;
+      top: 64px;
+      left: 2vw;
+      width: 96vw;
+      max-width: 98vw;
+      border-radius: 14px;
+      z-index: 2100;
+      padding: 0;
+    }
+    .panel header {
+      font-size: 15px;
+      padding: 12px 10px 8px 10px;
+    }
+    .content { padding: 12px; gap: 10px; }
+    input, textarea, select {
+      font-size: 15px;
+      padding: 9px 10px;
+      border-radius: 10px;
+    }
+    textarea { min-height: 56px; }
+    .actions { gap: 8px; }
+
+    /* 4. Filter box */
+    #filterBox {
+      position: fixed;
+      top: 64px;
+      right: 2vw;
+      width: 54px;
+      max-width: 96vw;
+      border-radius: 14px;
+      z-index: 2200;
+      transition: width .2s, height .2s;
+    }
+    #filterBox:not(.collapsed) {
+      width: 90vw;
+      max-width: 320px;
+    }
+    #filterBox.collapsed {
+      height: 40px;
+      overflow: hidden;
+      width: 54px;
+      padding: 8px;
+    }
+    #filterBox:not(.collapsed) {
+      padding: 12px 16px;
+    }
+    #filterHeader {
+      font-size: 14px;
+    }
+    #filterToggle img { width: 20px; height: 20px; }
+    #filterBox label {
+      font-size: 15px;
+      padding: 4px 0;
+    }
+    #filterBox label input[type=checkbox] {
+      width: 20px; height: 20px;
+    }
+
+    /* 5. Legend (danger scale) - collapsible on mobile */
+    .legend {
+      position: fixed;
+      right: 2vw;
+      bottom: 16px;
+      width: 90vw;
+      max-width: 320px;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 13px;
+      z-index: 1200;
+      transition: box-shadow .2s, background .2s;
+    }
+    .legend .bar {
+      width: 100%;
+      min-width: 0;
+      height: 10px;
+      margin-top: 6px;
+    }
+    .legend .hint { font-size: 12px; }
+    .legend .legend-toggle {
+      display: none;
+    }
+    @media (max-width: 600px) {
+      .legend {
+        width: 92vw;
+        right: 4vw;
+        bottom: 16px;
+        padding: 8px 8px;
+        font-size: 12px;
       }
-      header h1{
-        font-size:17px;
-        flex-basis:100%;
-        margin-bottom:2px;
+      .legend .legend-toggle {
+        display: block;
+        background: var(--accent-gradient);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        padding: 4px 10px;
+        margin-bottom: 6px;
+        cursor: pointer;
       }
-      .search-wrap{
-        width:100%;
-        max-width:100vw;
-        margin:0;
-        padding:2px 2vw;
-        box-sizing:border-box;
-      }
-      #searchInput{
-        width:100%;
-        min-width:0;
-        max-width:100vw;
-        font-size:15px;
-        padding:9px 10px;
-      }
-      #searchBtn{
-        padding:9px 12px;
-        font-size:15px;
-      }
-      .spacer{display:none;}
-      .icon-btn{
-        padding:7px 8px;
-        gap:4px;
-        margin:0 2px;
-      }
-      .icon-btn img{width:20px;height:20px;}
-      #userEmail{display:none;}
-      .btn{padding:9px 12px;font-size:14px;}
-      .panel{
-        width:98vw;
-        left:1vw;
-        top:70px;
-        max-width:99vw;
-        border-radius:12px;
-        padding:0;
-      }
-      .panel header{
-        font-size:15px;
-        padding:12px 10px 8px 10px;
-      }
-      .content{padding:12px;gap:10px;}
-      input,textarea,select{
-        font-size:14px;
-        padding:9px 10px;
-        border-radius:10px;
-      }
-      textarea{min-height:56px;}
-      .actions{gap:6px;}
-      #searchResults{
-        left:1vw;
-        width:98vw;
-        max-width:99vw;
-        top:62px;
-        border-radius:12px;
-        font-size:15px;
-      }
-      .search-item{padding:10px 12px;}
-      #filterBox{
-        right:2vw;
-        top:120px; /* move filter lower */
-        width:98vw;
-        max-width:99vw;
-        border-radius:12px;
-        padding:8px 6px;
-        font-size:15px;
-      }
-      #filterHeader{font-size:14px;}
-      .legend{
-        right:2vw;
-        bottom:64px; /* move legend up to avoid overlap with controls */
-        width:90vw;
-        min-width:0;
-        max-width:99vw;
-        border-radius:12px;
-        padding:10px 10px;
-        font-size:13px;
-      }
-      .legend .bar{width:100%;min-width:0;}
-      .leaflet-popup-content{
-        min-width:0;
-        max-width:95vw;
-        padding:12px 4px 6px 4px;
-        font-size:14px;
-      }
-      .leaflet-popup-content-wrapper{
-        border-radius:12px;
-        padding:0;
+      .legend.collapsed .bar,
+      .legend.collapsed .hint,
+      .legend.collapsed div:not(.legend-toggle) {
+        display: none !important;
       }
     }
 
-    /* Extra small devices */
-    @media(max-width:400px){
-      header{padding:4px 1vw 4px 1vw;}
-      .panel{width:99vw;left:0.5vw;}
-      #searchResults{width:99vw;left:0.5vw;}
-      #filterBox{width:99vw;right:0.5vw;top:120px;}
-      .legend{width:98vw;right:1vw;bottom:64px;}
+    /* 6. Credit */
+    .credit {
+      position: fixed;
+      right: 2vw;
+      bottom: 72px;
+      z-index: 1500;
+      font-size: 13px;
+      color: #888;
+      background: rgba(255,255,255,0.92);
+      border-radius: 10px;
+      padding: 6px 14px;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+      pointer-events: none;
+      user-select: none;
+    }
+    @media (max-width: 600px) {
+      .credit { right: 4vw; bottom: 88px; font-size: 12px; }
     }
 
-    /* Make map fill viewport on mobile */
-    html, body, #app, #map{
-      min-height:100vh;
-      height:100%;
-      width:100vw;
-      box-sizing:border-box;
+    /* 7. Popups and touch targets */
+    .leaflet-popup-content-wrapper {
+      border-radius: 14px;
+      font-size: 16px;
+      min-width: 0;
+      max-width: 95vw;
+      padding: 0;
+    }
+    .leaflet-popup-content {
+      font-size: 16px;
+      padding: 14px 8px 8px 8px;
+      min-width: 0;
+      max-width: 95vw;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .popup button, .vote-btn, .btn, .icon-btn {
+      min-width: 44px;
+      min-height: 44px;
+      font-size: 16px;
+      padding: 8px 10px;
+      border-radius: 10px;
     }
 
-    /* Improve touch targets */
-    button, .icon-btn, .btn{
-      min-height:40px;
-      min-width:40px;
-      touch-action:manipulation;
+    /* 8. Leaflet controls (zoom, locate) */
+    .leaflet-top.leaflet-right .leaflet-control {
+      z-index: 1200 !important;
+      margin-top: 64px;
+    }
+    .leaflet-control-locate {
+      margin-top: 12px !important;
+    }
+    .leaflet-control-zoom {
+      margin-top: 64px !important;
+    }
+    .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+      min-width: 44px;
+      min-height: 44px;
+      font-size: 20px;
     }
 
-    /* Prevent popup overflow on mobile */
-    .leaflet-popup-content{
-      word-break:break-word;
-      overflow-wrap:break-word;
+    /* 9. Marker cluster - smaller icons for mobile */
+    @media (max-width: 600px) {
+      .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 13px !important;
+      }
+    }
+
+    /* 10. General mobile UX improvements */
+    @media (max-width: 900px) {
+      header { height: 52px; min-height: 52px; }
+      #filterBox { top: 56px; }
+      .panel { top: 56px; }
+    }
+    @media (max-width: 600px) {
+      header { height: 48px; min-height: 48px; padding: 4px 2vw; }
+      #filterBox { top: 48px; }
+      .panel { top: 48px; }
+      #searchResults { top: 48px; }
+    }
+    @media (max-width: 400px) {
+      header { padding: 2px 1vw; }
+      .panel { left: 1vw; width: 98vw; }
+      #filterBox { right: 1vw; width: 98vw; }
+      .legend { right: 1vw; width: 98vw; }
+      .credit { right: 1vw; }
+    }
+
+    /* 11. Touch-friendly design */
+    button, .icon-btn, .btn, .vote-btn {
+      touch-action: manipulation;
+    }
+
+    /* 12. Hide scrollbars on mobile for map */
+    body, html {
+      overflow: hidden;
     }
 
     body.dark-mode{
@@ -503,3 +664,174 @@
     body.dark-mode .vote-btn.upvoted{background:var(--success);}
     body.dark-mode .vote-btn.downvoted{background:var(--danger);}
     body.dark-mode .legend .bar{background:linear-gradient(90deg,#facc15 0%,#ef4444 100%);}
+
+    .credit {
+      position: absolute;
+      right: 28px;
+      bottom: 100px;
+      z-index: 1500;
+      font-size: 14px;
+      color: #888;
+      background: rgba(255,255,255,0.92);
+      border-radius: 10px;
+      padding: 6px 14px;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    @media(max-width:900px){
+      .credit { right: 12px; bottom: 120px; font-size:13px; }
+    }
+    @media(max-width:600px){
+      .credit { right: 8px; bottom: 120px; font-size:13px; }
+    }
+    @media(max-width:400px){
+      .credit { right: 4px; bottom: 120px; font-size:12px; }
+    }
+
+    /* Hide mobile-only by default, show on mobile */
+    .mobile-only { display: none !important; }
+    @media (max-width: 600px) {
+      .mobile-only { display: inline-flex !important; }
+      .search-wrap input,
+      .search-wrap button#searchBtn { display: none !important; }
+    }
+
+    /* Mobile search overlay */
+    .mobile-search-overlay {
+      display: none;
+      position: fixed;
+      z-index: 3000;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(24,28,42,0.92);
+      backdrop-filter: blur(8px);
+      align-items: flex-start;
+      justify-content: center;
+      flex-direction: column;
+      padding: 0;
+    }
+    .mobile-search-overlay.active {
+      display: flex;
+    }
+    .mobile-search-bar {
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      padding: 18px 12px 10px 12px;
+      background: rgba(36,40,56,0.98);
+      box-sizing: border-box;
+      gap: 10px;
+    }
+    #mobileSearchInput {
+      flex: 1;
+      font-size: 18px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1.5px solid #e0e7ef;
+      background: #fff;
+      color: #23272f;
+      outline: none;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+    }
+    body.dark-mode #mobileSearchInput {
+      background: #232946;
+      color: #e5e7ef;
+      border-color: #2d334d;
+    }
+    #mobileSearchClose {
+      background: transparent;
+      border: none;
+      padding: 8px;
+      border-radius: 10px;
+      min-width: 44px;
+      min-height: 44px;
+    }
+    #mobileSearchClose img { width: 28px; height: 28px; }
+
+    #mobileSearchResults {
+      width: 100vw;
+      max-height: 60vh;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.97);
+      border-radius: 0 0 18px 18px;
+      box-shadow: 0 8px 32px rgba(37,99,235,0.13);
+      margin-top: 0;
+      padding: 0;
+    }
+    body.dark-mode #mobileSearchResults {
+      background: rgba(24,28,42,0.96);
+      color: #e5e7ef;
+    }
+    .mobile-search-result {
+      padding: 16px 18px;
+      border-bottom: 1px solid #e0e7ef;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .mobile-search-result:last-child { border-bottom: none; }
+    .mobile-search-result:hover {
+      background: rgba(37,99,235,0.08);
+    }
+    @media (max-width: 600px) {
+      .mobile-search-overlay { display: none; }
+      .mobile-search-overlay.active { display: flex; }
+      .search-wrap { flex: none; width: auto; }
+    }
+
+    /* Smaller, more transparent add panel */
+    .panel {
+      width: 320px;
+      max-width: 92vw;
+      left: auto;
+      right: 2vw;
+      top: 80px;
+      background: rgba(255,255,255,0.65);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(37,99,235,0.10);
+      opacity: 0.98;
+      z-index: 2100;
+      padding: 0;
+      display: none;
+      backdrop-filter: blur(10px);
+      pointer-events: auto;
+      transition: background 0.18s, width 0.18s, right 0.18s;
+    }
+    .panel header {
+      font-size: 15px;
+      padding: 10px 14px 6px 14px;
+      background: transparent;
+      border-bottom: 1px solid #e0e7ef;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: -.2px;
+    }
+    .content {
+      padding: 10px 14px 14px 14px;
+      gap: 8px;
+      background: transparent;
+    }
+    @media (max-width: 600px) {
+      .panel {
+        width: 96vw;
+        max-width: 98vw;
+        right: 2vw;
+        left: auto;
+        top: 56px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.60);
+        opacity: 0.97;
+        box-shadow: 0 2px 12px rgba(37,99,235,0.08);
+        padding: 0;
+      }
+      .panel header { font-size: 14px; padding: 8px 10px 6px 10px; }
+      .content { padding: 8px 10px 10px 10px; gap: 7px; }
+    }
+
+    /* Always show legend, remove legend-toggle button */
+    .legend .legend-toggle {
+      display: none !important;
+    }

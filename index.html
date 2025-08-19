@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dhaka Safety Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dhaka Safety Map — final</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -24,7 +24,11 @@
 
       <div class="search-wrap" role="search" aria-label="Search place">
         <input id="searchInput" placeholder="Search place (e.g., Gulshan, Dhaka)"/>
-        <button id="searchBtn">Go</button>
+        <button id="searchBtn" class="btn">Go</button>
+        <!-- Mobile search icon button, hidden on desktop -->
+        <button id="mobileSearchBtn" class="icon-btn mobile-only" type="button" aria-label="Open search">
+          <img src="./search.png" alt="search" />
+        </button>
       </div>
 
       <div class="spacer"></div>
@@ -44,6 +48,14 @@
 
     <div id="map"></div>
     <div id="searchResults" aria-hidden="true"></div>
+    <!-- Mobile search overlay -->
+    <div id="mobileSearchOverlay" class="mobile-search-overlay">
+      <div class="mobile-search-bar">
+        <input id="mobileSearchInput" placeholder="Search place (e.g., Gulshan, Dhaka)" autocomplete="off"/>
+        <button id="mobileSearchClose" class="icon-btn" aria-label="Close search"><img src="./close.png" alt="close"/></button>
+      </div>
+      <div id="mobileSearchResults"></div>
+    </div>
   </div>
 
  
@@ -101,7 +113,8 @@
     </div>
   </div>
 
-  <div class="legend">
+  <div id="credit" class="credit">made by Arittro</div>
+  <div class="legend" id="legend">
     <div>Danger scale (net upvotes)</div>
     <div class="bar"></div>
     <div class="hint">Yellow = low, Red = high</div>
@@ -115,4 +128,4 @@
   <script type="module" src="app.js"></script>
 </body>
 </html>
-
+</html>

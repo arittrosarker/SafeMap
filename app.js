@@ -415,6 +415,94 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebas
     searchResultsDiv.style.display = 'block';
   }
 
+  // Mobile search overlay logic
+const mobileSearchBtn = document.getElementById('mobileSearchBtn');
+const mobileSearchOverlay = document.getElementById('mobileSearchOverlay');
+const mobileSearchInput = document.getElementById('mobileSearchInput');
+const mobileSearchClose = document.getElementById('mobileSearchClose');
+const mobileSearchResults = document.getElementById('mobileSearchResults');
+
+// Show overlay on mobile search icon click
+if (mobileSearchBtn && mobileSearchOverlay) {
+  mobileSearchBtn.addEventListener('click', () => {
+    mobileSearchOverlay.classList.add('active');
+    setTimeout(() => mobileSearchInput && mobileSearchInput.focus(), 100);
+  });
+}
+if (mobileSearchClose && mobileSearchOverlay) {
+  mobileSearchClose.addEventListener('click', () => {
+    mobileSearchOverlay.classList.remove('active');
+    mobileSearchInput.value = '';
+    mobileSearchResults.innerHTML = '';
+  });
+}
+
+// Mobile search logic (reuse searchPlace)
+function showMobileSearchResults(items) {
+  mobileSearchResults.innerHTML = '';
+  if (!items || items.length === 0) {
+    mobileSearchResults.innerHTML = '<div style="padding:18px;color:#888;">No results found.</div>';
+    return;
+  }
+  for (const it of items) {
+    const name = it.display_name || `${it.lat},${it.lon}`;
+    const div = document.createElement('div');
+    div.className = 'mobile-search-result';
+    div.innerHTML = `<div style="font-weight:600">${escapeHtml(name)}</div><div style="font-size:13px;color:#666">${escapeHtml((it.type||'') + (it.class? ' • ' + it.class : ''))}</div>`;
+    div.onclick = () => {
+      const lat = parseFloat(it.lat), lon = parseFloat(it.lon);
+      map.setView([lat,lon], 16);
+      if(searchMarker) { map.removeLayer(searchMarker); searchMarker = null; }
+      searchMarker = L.marker([lat,lon]).addTo(map).bindPopup(name).openPopup();
+      mobileSearchOverlay.classList.remove('active');
+      mobileSearchInput.value = '';
+      mobileSearchResults.innerHTML = '';
+    };
+    mobileSearchResults.appendChild(div);
+  }
+}
+let lastMobileSearchController = null;
+async function mobileSearchPlace(query){
+  if(!query || query.trim().length===0) {
+    mobileSearchResults.innerHTML = '';
+    return;
+  }
+  if(lastMobileSearchController) lastMobileSearchController.abort();
+  lastMobileSearchController = new AbortController();
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=6&q=${encodeURIComponent(query)}&addressdetails=1&countrycodes=bd`;
+  try{
+    const res = await fetch(url, { signal: lastMobileSearchController.signal, headers:{ 'Accept-Language':'en' } });
+    const json = await res.json();
+    showMobileSearchResults(json || []);
+  }catch(e){
+    if(e.name!=='AbortError') console.error('Search error', e);
+    mobileSearchResults.innerHTML = '';
+  }
+}
+function debounceMobile(fn, wait){
+  let t = null;
+  return function(...args){ clearTimeout(t); t = setTimeout(()=> fn.apply(this,args), wait); };
+}
+const debouncedMobileSearch = debounceMobile((q)=> mobileSearchPlace(q), 240);
+if (mobileSearchInput) {
+  mobileSearchInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter') { mobileSearchPlace(mobileSearchInput.value); e.preventDefault(); }
+  });
+  mobileSearchInput.addEventListener('input', (e) => { debouncedMobileSearch(e.target.value); });
+}
+
+// Hide overlay if user taps outside the search bar/results
+if (mobileSearchOverlay) {
+  mobileSearchOverlay.addEventListener('click', (e) => {
+    if (e.target === mobileSearchOverlay) {
+      mobileSearchOverlay.classList.remove('active');
+      mobileSearchInput.value = '';
+      mobileSearchResults.innerHTML = '';
+    }
+  });
+}
+
+
   function debounce(fn, wait){
     let t = null;
     return function(...args){ clearTimeout(t); t = setTimeout(()=> fn.apply(this,args), wait); };
@@ -547,6 +635,36 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebas
       console.error(err); Swal.fire('Failed','See console','error');
     }
   });
+
+  // Legend collapsible on mobile
+  const legend = document.getElementById('legend');
+  const legendToggle = document.getElementById('legendToggle');
+  if (legend && legendToggle) {
+    let legendCollapsed = window.innerWidth <= 600;
+    function updateLegendState() {
+      if (window.innerWidth <= 600) {
+        legend.classList.toggle('collapsed', legendCollapsed);
+        legendToggle.style.display = 'block';
+      } else {
+        legend.classList.remove('collapsed');
+        legendToggle.style.display = 'none';
+      }
+    }
+    legendToggle.addEventListener('click', () => {
+      legendCollapsed = !legendCollapsed;
+      updateLegendState();
+    });
+    window.addEventListener('resize', updateLegendState);
+    updateLegendState();
+  }
+
+  // Ensure map resizes with viewport changes
+  window.addEventListener('resize', () => {
+    if (window.L && window.L.Map && map && map.invalidateSize) {
+      setTimeout(() => map.invalidateSize(), 200);
+    }
+  });
+
 
   function capitalize(s){ return (s||'').charAt(0).toUpperCase() + (s||'').slice(1).replace('_',' ') }
   function escapeHtml(str){ return (str||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
