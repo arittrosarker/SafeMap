@@ -27,6 +27,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebas
 
   const addModeBtn = document.getElementById('addModeBtn');
   const addLabel = document.getElementById('addLabel');
+  const addIcon = document.getElementById('addIcon');
   const addPanel = document.getElementById('addPanel');
   const exitAdd = document.getElementById('exitAdd');
   const cancelAdd = document.getElementById('cancelAdd');
@@ -44,8 +45,10 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebas
   const darkModeBtn = document.getElementById('darkModeBtn');
   const myAccountBtn = document.getElementById('myAccountBtn');
   const filterBox = document.getElementById('filterBox');
-  const filterToggle = document.getElementById('filterToggle');
   const filterBody = document.getElementById('filterBody');
+  const filterTitle = document.getElementById('filterTitle');
+  const filterMinimizeBtn = document.getElementById('filterMinimizeBtn');
+  const addDetailsBtn = document.getElementById('addDetailsBtn');
 
 
   const Toast = Swal.mixin({ toast: true, position: 'bottom', showConfirmButton: false, timer: 1600 });
@@ -95,6 +98,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebas
       logoutBtn.style.display='inline-block';
       myAccountBtn.style.display='inline-block';
       userEmail.textContent = user.email || user.displayName || 'Signed in';
+      userEmail.style.display = 'inline-block'; // Show email when logged in
 
       try {
         const userRef = ref(db, `users/${user.uid}`);
@@ -115,6 +119,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebas
       logoutBtn.style.display='none';
       myAccountBtn.style.display='none';
       userEmail.textContent = '';
+      userEmail.style.display = 'none'; // Hide email when logged out
     }
     for(const [id, circle] of circlesById.entries()){
       if(circle.isPopupOpen()) updatePopupVoteUI(id).catch(e=>console.error(e));
@@ -122,8 +127,30 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebas
   });
 
 
-  function enterAddMode(){ addMode = true; addLabel.textContent='Exit add mode'; addModeBtn.classList.add('btn-primary'); map.getContainer().style.cursor='crosshair'; addPanel.style.display='none'; showToast('Add mode: click map to select area'); }
-  function exitAddMode(){ addMode = false; addLabel.textContent='Add dangerzone'; addModeBtn.classList.remove('btn-primary'); map.getContainer().style.cursor=''; pendingLatLng=null; coordField.value=''; if(tempCircle){ map.removeLayer(tempCircle); tempCircle=null } addPanel.style.display='none'; }
+  function enterAddMode() {
+    addMode = true;
+    addLabel.textContent = 'Exit add mode';
+    addLabel.style.color = '#fff';
+    addIcon.src = './sub.png';
+    addIcon.alt = 'exit';
+    addModeBtn.classList.add('btn-primary');
+    map.getContainer().style.cursor = 'crosshair';
+    addPanel.style.display = 'none';
+    showToast('Add mode: click map to select area');
+  }
+  function exitAddMode() {
+    addMode = false;
+    addLabel.textContent = 'Add dangerzone';
+    addLabel.style.color = '';
+    addIcon.src = './add.png';
+    addIcon.alt = 'add';
+    addModeBtn.classList.remove('btn-primary');
+    map.getContainer().style.cursor = '';
+    pendingLatLng = null;
+    coordField.value = '';
+    if (tempCircle) { map.removeLayer(tempCircle); tempCircle = null }
+    addPanel.style.display = 'none';
+  }
   addModeBtn.onclick = ()=> addMode ? exitAddMode() : enterAddMode();
   exitAdd.onclick = ()=> exitAddMode();
   cancelAdd.onclick = ()=>{ pendingLatLng=null; coordField.value=''; descField.value=''; if(tempCircle){ map.removeLayer(tempCircle); tempCircle=null } addPanel.style.display='none'; };
@@ -132,6 +159,10 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebas
   function updateRadiusUI(v){ radiusValue.textContent=`${v}m`; const pct = Math.round(((v - Number(radiusRange.min)) / (Number(radiusRange.max) - Number(radiusRange.min))) * 100); radiusFill.style.width = `${pct}%`; if(tempCircle && pendingLatLng) tempCircle.setRadius(Number(v)); }
   updateRadiusUI(radiusRange.value);
 
+  function isMobile() {
+    return window.innerWidth <= 600;
+  }
+
   map.on('click', e => {
     if(!addMode) return;
     pendingLatLng = e.latlng;
@@ -139,9 +170,30 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebas
     const r = Number(radiusRange.value) || 60;
     if(tempCircle) map.removeLayer(tempCircle);
     tempCircle = L.circle(e.latlng, { radius: r, color:'#ff9900', weight:2, fillColor:'#ffea99', fillOpacity:0.35 }).addTo(map);
-    addPanel.style.display='block';
+
+    if (isMobile()) {
+      addPanel.style.display = 'none';
+      addDetailsBtn.style.display = 'block';
+    } else {
+      addPanel.style.display = 'block';
+      if (addDetailsBtn) addDetailsBtn.style.display = 'none';
+    }
   });
 
+  if (addDetailsBtn) {
+    addDetailsBtn.onclick = function() {
+      addPanel.style.display = 'block';
+      addDetailsBtn.style.display = 'none';
+    };
+  }
+
+  // Hide addDetailsBtn when exiting add mode or cancelling
+  function hideAddDetailsBtn() {
+    if (addDetailsBtn) addDetailsBtn.style.display = 'none';
+  }
+  addModeBtn.onclick = ()=> { hideAddDetailsBtn(); addMode ? exitAddMode() : enterAddMode(); };
+  exitAdd.onclick = ()=> { hideAddDetailsBtn(); exitAddMode(); };
+  cancelAdd.onclick = ()=>{ hideAddDetailsBtn(); pendingLatLng=null; coordField.value=''; descField.value=''; if(tempCircle){ map.removeLayer(tempCircle); tempCircle=null } addPanel.style.display='none'; };
 
   submitAdd.onclick = async () => {
     if(!pendingLatLng){ showToast('Select an area first','warning'); return; }
@@ -202,10 +254,22 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebas
     const reportBtn = node.querySelector('button[data-action="report"]');
     const delBtn = node.querySelector('button[data-action="delete"]');
 
-    if(upBtn) upBtn.onclick = () => window.vote(id, 1);
-    if(downBtn) downBtn.onclick = () => window.vote(id, -1);
-    if(reportBtn) reportBtn.onclick = () => window.reportMark(id);
-    if(delBtn) delBtn.onclick = () => window.deleteMark(id);
+    if(upBtn) {
+      upBtn.onclick = () => window.vote(id, 1);
+      upBtn.setAttribute('aria-label', 'Upvote this danger zone');
+    }
+    if(downBtn) {
+      downBtn.onclick = () => window.vote(id, -1);
+      downBtn.setAttribute('aria-label', 'Downvote this danger zone');
+    }
+    if(reportBtn) {
+      reportBtn.onclick = () => window.reportMark(id);
+      reportBtn.setAttribute('aria-label', 'Report this danger zone');
+    }
+    if(delBtn) {
+      delBtn.onclick = () => window.deleteMark(id);
+      delBtn.setAttribute('aria-label', 'Delete this danger zone');
+    }
   }
 
   async function updatePopupVoteUI(markId){
@@ -545,8 +609,7 @@ if (mobileSearchOverlay) {
       onAdd(){
         const wrap = L.DomUtil.create('div','leaflet-control-locate');
         const btn = L.DomUtil.create('button','locate-btn',wrap);
-        btn.title='Locate (click) • Right-click toggle follow';
-        btn.innerHTML = `<img src="./gps.png" alt="gps">`;
+
         const span = L.DomUtil.create('span','follow-indicator',wrap);
         span.textContent='';
         L.DomEvent.disableClickPropagation(wrap);
@@ -565,22 +628,55 @@ if (mobileSearchOverlay) {
   darkModeBtn.addEventListener('click', () => {
     darkMode = !darkMode;
     document.body.classList.toggle('dark-mode', darkMode);
+    // Do NOT switch map tiles, keep lightTiles always
+    // if(darkMode){
+    //   map.removeLayer(lightTiles); map.addLayer(darkTiles);
+    //   document.documentElement.style.setProperty('--ui-bg','#0b1220');
+    //   document.documentElement.style.setProperty('--muted','#bbb');
+    // } else {
+    //   map.removeLayer(darkTiles); map.addLayer(lightTiles);
+    //   document.documentElement.style.setProperty('--ui-bg','#fff');
+    //   document.documentElement.style.setProperty('--muted','#666');
+    // }
     if(darkMode){
-      map.removeLayer(lightTiles); map.addLayer(darkTiles);
       document.documentElement.style.setProperty('--ui-bg','#0b1220');
       document.documentElement.style.setProperty('--muted','#bbb');
     } else {
-      map.removeLayer(darkTiles); map.addLayer(lightTiles);
       document.documentElement.style.setProperty('--ui-bg','#fff');
       document.documentElement.style.setProperty('--muted','#666');
     }
+    // Force update of popups and overlays for dark mode
+    setTimeout(() => {
+      document.querySelectorAll('.leaflet-popup-content-wrapper, .panel, #filterBox, .legend, .search-wrap, #searchResults, .mobile-search-bar, #mobileSearchResults, .credit').forEach(el => {
+        el.classList.toggle('dark-mode', darkMode);
+      });
+    }, 10);
   });
 
 
-  filterToggle.addEventListener('click', () => {
-    // Toggle collapsed class on click
-    filterBox.classList.toggle('collapsed');
-  });
+  if (filterTitle) {
+    filterTitle.addEventListener('click', () => {
+      filterBox.classList.toggle('collapsed');
+      updateFilterMinimizeBtn();
+    });
+  }
+  if (filterMinimizeBtn) {
+    filterMinimizeBtn.addEventListener('click', () => {
+      filterBox.classList.add('collapsed');
+      updateFilterMinimizeBtn();
+    });
+  }
+  function updateFilterMinimizeBtn() {
+    if (!filterBox.classList.contains('collapsed')) {
+      filterMinimizeBtn.style.display = 'inline-flex';
+    } else {
+      filterMinimizeBtn.style.display = 'none';
+    }
+  }
+  // On load, ensure correct state
+  if (filterMinimizeBtn) updateFilterMinimizeBtn();
+
+
   const filterCheckboxes = filterBody.querySelectorAll('input[type=checkbox][data-cat]');
   filterCheckboxes.forEach(cb=>{
     cb.addEventListener('change', ()=> {
